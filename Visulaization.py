@@ -24,7 +24,7 @@ class Protein:
         return [-self.interaction_energy if residue else 0.0 for residue in self.chain]
 
     def model_kinetics(self):
-        folding_time = math.exp(self.barrier_height / self.temperature)  # Simple kinetic model
+        folding_time = math.exp(self.barrier_height / self.temperature) 
         print(f"Estimated folding time: {folding_time} seconds")
 
 def read_dataset(filename):
@@ -53,7 +53,7 @@ def main():
     barrier_height = 10
 
     dataset = read_dataset(csv_path)
-    dataset = dataset[:100]  # Limiting to the first 100 proteins for display
+    dataset = dataset[:8000]  # Limiting to the first 100 proteins for display
     for entry, sequence in dataset:
         protein = Protein(len(sequence), interaction_energy, temperature, barrier_height)
         protein.set_sequence(sequence)
