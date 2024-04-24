@@ -35,7 +35,6 @@ def build_combinatorial_assembly_graph(dataset):
     G = nx.Graph()
     for entry in dataset:
         G.add_node(entry[0])  # Add protein entry as a node
-    # Adding edges arbitrarily; in practice, this could be based on some criteria
     for i in range(len(dataset)):
         for j in range(i + 1, len(dataset)):
             G.add_edge(dataset[i][0], dataset[j][0])

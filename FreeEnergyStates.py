@@ -7,12 +7,10 @@ class Residue:
         self.charge = self.set_charge()
 
     def set_hydrophobicity(self):
-        # Example hydrophobicity values
         hydrophobic = {'I': True, 'V': True, 'L': True, 'M': True, 'A': False}
         return hydrophobic.get(self.type, False)
 
     def set_charge(self):
-        # Example charge values
         charge = {'K': +1, 'R': +1, 'D': -1, 'E': -1}
         return charge.get(self.type, 0)
 
@@ -33,7 +31,6 @@ class Protein:
             if i < length - 1 and self.chain[i].hydrophobic and self.chain[i + 1].hydrophobic:
                 total_energy -= 0.2  # Example energy value for hydrophobic interactions
 
-            # Long-range interactions example (arbitrary distance set to 4 residues apart)
             if i < length - 4:
                 if self.chain[i].charge != 0 and self.chain[i + 4].charge != 0:
                     # Electrostatic interactions considering charges
