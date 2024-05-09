@@ -51,7 +51,7 @@ def visualize_graph_with_plotly(G):
 
     node_x = []
     node_y = []
-    text = []
+    texts = []
     colors = []  # List to store unique colors for each node
     node_size = []
     color_palette = px.colors.qualitative.D3  # Professional color palette
@@ -61,20 +61,26 @@ def visualize_graph_with_plotly(G):
         node_x.append(x)
         node_y.append(y)
         node_info = f"{node}<br>Energy: {G.nodes[node]['energy']}<br>Size: {G.nodes[node]['size']}"
-        text.append(node_info)
+        texts.append(node_info)
         colors.append(color_palette[i % len(color_palette)])  # Cycle through color palette
-        node_size.append(5 + G.nodes[node]['size'] / 5)  # Dynamic node size
+        node_size.append(10 + G.nodes[node]['size'] / 5)  # Dynamic node size
 
     node_trace = go.Scatter(
         x=node_x, y=node_y,
-        mode='markers',
+        mode='markers+text',  # Add text to the nodes
+        text=[node for node in G.nodes()],  # Labels are the protein entries
+        textposition="middle center",  # Position text in the center of the nodes
         hoverinfo='text',
         marker=dict(
             size=node_size,
             color=colors,
             line=dict(width=2, color='DarkSlateGrey')
         ),
-        text=text
+        textfont=dict(
+            family="Arial",
+            size=12,
+            color='black'),
+        hovertext=texts
     )
 
     fig = go.Figure(data=[edge_trace, node_trace],
