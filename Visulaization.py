@@ -27,14 +27,14 @@ def read_dataset(filename):
 def build_combinatorial_assembly_graph(proteins):
     G = nx.Graph()
     for protein in proteins:
-        G.add_node(protein.entry, sequence=protein.sequence, energy=protein.interaction_energy)
+        G.add_node(protein.entry, sequence=protein.sequence, energy=protein.interaction_energy, size=len(protein.sequence))
         for other in proteins:
             if protein != other:
                 G.add_edge(protein.entry, other.entry)
     return G
 
 def visualize_graph_with_plotly(G):
-    pos = nx.spring_layout(G)
+    pos = nx.spring_layout(G, k=0.1, iterations=50)  # Improved layout
     edge_x = []
     edge_y = []
     for edge in G.edges():
@@ -45,7 +45,7 @@ def visualize_graph_with_plotly(G):
 
     edge_trace = go.Scatter(
         x=edge_x, y=edge_y,
-        line=dict(width=0.5, color='#888'),
+        line=dict(width=0.5, color='Grey'),
         hoverinfo='none',
         mode='lines')
 
@@ -53,22 +53,25 @@ def visualize_graph_with_plotly(G):
     node_y = []
     text = []
     colors = []  # List to store unique colors for each node
-    color_palette = px.colors.qualitative.Plotly  # Using Plotly's qualitative color palette
+    node_size = []
+    color_palette = px.colors.qualitative.D3  # Professional color palette
 
     for i, node in enumerate(G.nodes()):
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
-        text.append(f"{node}: {G.nodes[node]['energy']}")
+        node_info = f"{node}<br>Energy: {G.nodes[node]['energy']}<br>Size: {G.nodes[node]['size']}"
+        text.append(node_info)
         colors.append(color_palette[i % len(color_palette)])  # Cycle through color palette
+        node_size.append(5 + G.nodes[node]['size'] / 5)  # Dynamic node size
 
     node_trace = go.Scatter(
         x=node_x, y=node_y,
         mode='markers',
         hoverinfo='text',
         marker=dict(
-            size=10,
-            color=colors,  # Apply unique color for each node
+            size=node_size,
+            color=colors,
             line=dict(width=2, color='DarkSlateGrey')
         ),
         text=text
@@ -76,12 +79,16 @@ def visualize_graph_with_plotly(G):
 
     fig = go.Figure(data=[edge_trace, node_trace],
                     layout=go.Layout(
+                        title='Protein Interaction Graph',
+                        titlefont_size=16,
                         showlegend=False,
                         hovermode='closest',
-                        margin=dict(b=0, l=0, r=0, t=0),
+                        margin=dict(b=20, l=5, r=5, t=40),
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
-                    )
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        paper_bgcolor='white',
+                        plot_bgcolor='white',
+                    ))
     plot(fig, filename='network.html')
 
 def main():
