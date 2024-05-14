@@ -4,6 +4,8 @@ import networkx as nx
 import plotly.graph_objects as go
 from plotly.offline import plot
 import plotly.express as px
+import nglview as nv
+import ipywidgets
 
 class Protein:
     def __init__(self, entry, sequence, interaction_energy, temperature, barrier_height):
@@ -34,7 +36,7 @@ def build_combinatorial_assembly_graph(proteins):
     return G
 
 def visualize_graph_with_plotly(G):
-    pos = nx.spring_layout(G, k=0.1, iterations=50)  # Improved layout
+    pos = nx.spring_layout(G, k=0.3, iterations=100)  
     edge_x = []
     edge_y = []
     for edge in G.edges():
@@ -45,16 +47,17 @@ def visualize_graph_with_plotly(G):
 
     edge_trace = go.Scatter(
         x=edge_x, y=edge_y,
-        line=dict(width=0.5, color='Grey'),
+        line=dict(width=1, color='#888', dash='solid'),
+        opacity=0.7,
         hoverinfo='none',
         mode='lines')
 
     node_x = []
     node_y = []
     texts = []
-    colors = []  # List to store unique colors for each node
+    colors = []
     node_size = []
-    color_palette = px.colors.qualitative.D3  # Professional color palette
+    color_palette = px.colors.qualitative.Plotly
 
     for i, node in enumerate(G.nodes()):
         x, y = pos[node]
@@ -62,14 +65,14 @@ def visualize_graph_with_plotly(G):
         node_y.append(y)
         node_info = f"{node}<br>Energy: {G.nodes[node]['energy']}<br>Size: {G.nodes[node]['size']}"
         texts.append(node_info)
-        colors.append(color_palette[i % len(color_palette)])  # Cycle through color palette
-        node_size.append(10 + G.nodes[node]['size'] / 5)  # Dynamic node size
+        colors.append(color_palette[i % len(color_palette)])
+        node_size.append(10 + G.nodes[node]['size'] / 5)  
 
     node_trace = go.Scatter(
         x=node_x, y=node_y,
-        mode='markers+text',  # Add text to the nodes
-        text=[node for node in G.nodes()],  # Labels are the protein entries
-        textposition="middle center",  # Position text in the center of the nodes
+        mode='markers+text',
+        text=[node for node in G.nodes()],
+        textposition="top center",
         hoverinfo='text',
         marker=dict(
             size=node_size,
@@ -78,15 +81,15 @@ def visualize_graph_with_plotly(G):
         ),
         textfont=dict(
             family="Arial",
-            size=12,
+            size=10,
             color='black'),
         hovertext=texts
     )
 
     fig = go.Figure(data=[edge_trace, node_trace],
                     layout=go.Layout(
-                        title='Protein Interaction Graph',
-                        titlefont_size=16,
+                        title='Protein-Protein Interaction Network',
+                        titlefont_size=20,
                         showlegend=False,
                         hovermode='closest',
                         margin=dict(b=20, l=5, r=5, t=40),
@@ -97,15 +100,30 @@ def visualize_graph_with_plotly(G):
                     ))
     plot(fig, filename='network.html')
 
+def visualize_proteins_with_nglview(proteins):
+    views = []
+    for protein in proteins:
+        structure = nv.TextStructure(protein.sequence)
+        view = nv.show_text(structure)
+        view.add_cartoon(color='sstruc')
+        views.append(view)
+
+    tab = ipywidgets.Tab()
+    children = [view._remote_repr_jupyter_() for view in views]
+    tab.children = children
+    for i, protein in enumerate(proteins):
+        tab.set_title(i, protein.entry)
+    display(tab)
+
 def main():
-    csv_path = "final_unip_seqs_dict.csv"
+    csv_path = "/Users/dobromiriliev/Documents/GitHub/CombinatoricsPathways/final_unip_seqs_dict.csv"
     interaction_energy = 0.5
     temperature = 300
     barrier_height = 10
 
     data = read_dataset(csv_path)
     proteins = [Protein(row['Entry'], row['Sequence'], interaction_energy, temperature, barrier_height) for index, row in data.iterrows()]
-    limited_proteins = proteins[:10]  # Limit to first 10 proteins for visualization
+    limited_proteins = proteins[:10]
 
     for protein in limited_proteins:
         energy_profile = protein.calculate_free_energy_profile()
@@ -115,6 +133,7 @@ def main():
 
     G = build_combinatorial_assembly_graph(limited_proteins)
     visualize_graph_with_plotly(G)
+    visualize_proteins_with_nglview(limited_proteins)
 
 if __name__ == "__main__":
     main()
